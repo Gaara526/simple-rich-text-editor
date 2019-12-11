@@ -18,6 +18,6 @@
   },
   "homepage": "https://github.com/Gaara526/simple-rich-text-editor#readme",
   "dependencies": {
-    "nodeppt": "^2.1.8"
+    "nodeppt": "^1.4.2"
   }
 }
