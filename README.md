@@ -1,2 +1,3 @@
 # simple-rich-text-editor
-a simple-rich-text-editor training
+
+This project is for a simple-rich-text-editor learning
