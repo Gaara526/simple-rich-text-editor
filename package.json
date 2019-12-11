@@ -1,0 +1,23 @@
+{
+  "name": "simple-rich-text-editor",
+  "version": "1.0.0",
+  "description": "This project is for a simple-rich-text-editor learning",
+  "main": "index.js",
+  "scripts": {
+    "ppt": "nodeppt start -p 9998 -d ppt -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gaara526/simple-rich-text-editor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gaara526/simple-rich-text-editor/issues"
+  },
+  "homepage": "https://github.com/Gaara526/simple-rich-text-editor#readme",
+  "dependencies": {
+    "nodeppt": "^2.1.8"
+  }
+}
