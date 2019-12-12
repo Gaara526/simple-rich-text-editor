@@ -4,18 +4,237 @@
   <meta charset="UTF-8">
   <title>短信编辑器</title>
   <style>
-    .test-clone {
-      color: #ff0;
+    .editor-wrapper {
+      box-sizing: border-box;
+      overflow-y: auto;
+      margin-top: 10px;
+      width: 500px;
+      height: 194px;
+      border: 1px solid #DDDDDD;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 14px;
+      color: #333;
+      background-color: #fff;
+    }
+    .editor-wrapper.focus-status {
+      border-color: rgba(82,168,236,.8);
+      -webkit-box-shadow: 0 0 8px rgba(82,168,236,.6);
+      box-shadow: 0 0 8px rgba(82,168,236,.6);
+    }
+    .editor-container {
+      min-height: 160px;
+      word-break: break-all;
+    }
+    .editor-container[contenteditable]:focus {
+      outline: none;
+    }
+    .editor-suffix {
+      color: #999;
+      text-align: right;
+    }
+    .editor-prefix-float {
+      color: #999;
+      float: left;
     }
   </style>
 </head>
 <body>
-  <div class="editor-container">
-    测试
+  <div><button id="insert-nickname">插入用户昵称</button></div>
+  <div id="editor-wrapper" class="editor-wrapper">
+<!--    <div class="editor-prefix-float">【京东】</div>-->
+    <div id="editor-container" class="editor-container" contenteditable="true"></div>
+    <div id="editor-suffix" class="editor-suffix">回复TD退订</div>
   </div>
 </body>
 <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 <script>
-  $('.editor-container').addClass('test-clone');
+  var Editor = function() {
+    this.init();
+  };
+
+  $.extend(Editor.prototype, {
+    $editorWrapper: $('#editor-wrapper'), /* 编辑器外框 */
+    $editorContainer: $('#editor-container'), /* 编辑器容器 */
+    $insertNicknameBtn: $('#insert-nickname'), /* 插入用户昵称按钮 */
+
+    prefixSpan: '<span style="color: #999;" class="editor-prefix" contenteditable="false">【京东】</span>', /* 前缀签名块 */
+    nicknameSpan: '<span style="color: #999;" class="editor-nickname" contenteditable="false">用户昵称</span>', /* 用户昵称块 */
+
+    lastEditRange: null, /* 光标最后位置 */
+
+    /* 初始化 */
+    init: function() {
+      var me = this;
+
+      /* 加载前缀签名 */
+      this.$editorContainer.html(this.prefixSpan);
+      this.lastEditRange = this.getSafeRange();
+
+      /* 输入事件处理 */
+      this.$editorContainer.bind('input', function (e) {
+        me.inputHandle(me, e);
+      });
+
+      /* 聚焦事件处理 */
+      this.$editorContainer.bind('focus', function () {
+        me.$editorWrapper.addClass('focus-status');
+
+        var editorDom = me.$editorContainer.get(0);
+        if (editorDom.lastChild.nodeType !== 3) {
+          /* 如果编辑框最后节点不是文本节点，添加一个空的文本节点 */
+          var newTextNode = document.createTextNode('');
+          editorDom.appendChild(newTextNode);
+        }
+
+        /* 如果编辑框最后节点是一个空的文本节点（不空光标自动会出现，不用再写这个逻辑），让光标出现；*/
+        var lastChild = editorDom.lastChild;
+        if (lastChild.nodeType === 3 && lastChild.wholeText === '') {
+          var range = document.createRange();
+          range.selectNode(lastChild);
+          var selection = document.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      });
+
+      /* 失焦事件处理 */
+      this.$editorContainer.bind('blur', function () {
+        me.$editorWrapper.removeClass('focus-status');
+        me.recordLastRange();
+      });
+
+      /* 键盘按起事件处理 */
+      this.$editorContainer.bind('keyup', function (e) {
+        me.recordLastRange();
+      });
+
+      /* 插入用户昵称 */
+      this.$insertNicknameBtn.on('click', function (e) {
+        e.preventDefault();
+        me.insertNickname();
+      });
+
+      /* 粘贴事件处理 */
+      this.$editorContainer.bind('paste', function (e) {
+        e.preventDefault();
+        me.pasteHandle(e.originalEvent);
+      });
+    },
+
+    /* 获取安全的光标位置（即编辑框最后）*/
+    getSafeRange: function () {
+      var newRange;
+
+      if (document.createRange) {
+        newRange = document.createRange();
+        newRange.setStartAfter(this.$editorContainer.get(0).lastChild);
+      }
+
+      return newRange;
+    },
+
+    /* 记录光标位置 */
+    recordLastRange: function() {
+      if (window.getSelection && window.getSelection().getRangeAt) {
+        this.lastEditRange = window.getSelection().getRangeAt(0);
+      }
+    },
+
+    /* 某些情况下禁止插入或粘贴 */
+    isForbidden: function (range) {
+      /* 光标范围在前缀签名节点、昵称节点、短链节点、自定义节点内无法插入或粘贴 */
+      const forbiddenClassList = ['editor-prefix', 'editor-nickname'];
+      if (forbiddenClassList.indexOf(range.startContainer.parentNode.className) > -1) {
+        return true;
+      }
+
+      /* 光标起始点在前缀签名节点前无法插入或粘贴 */
+      return range.startContainer === this.$editorContainer.get(0) && range.startOffset === 0;
+    },
+
+    /* 输入事件处理 */
+    inputHandle: function() {
+      var inputContent = this.$editorContainer.html();
+
+      /* 输入框前缀签名不可删除，如果删除了需补回来，然后将光标移动至该文案后面 */
+      if (inputContent.indexOf(this.prefixSpan) < 0) {
+        // this.$editorContainer.prepend(this.prefixSpan);
+
+        if (window.getSelection && window.getSelection().getRangeAt) {
+          var range = window.getSelection().getRangeAt(0); /* 获取光标位置 */
+          var fragment = range.createContextualFragment(this.prefixSpan); /* 将 html 片段转化为文档片段 */
+          range.insertNode(fragment); /* 在光标位置插入该片段，光标范围会包括整个片段 */
+          range.collapse(false); /* 折叠光标范围，true 折叠到插入节点最前面，false 到最后面 */
+        }
+      }
+
+      /* 如果在前缀签名之前输入内容，则输入后要将输入内容删除 */
+      if (inputContent.indexOf(this.prefixSpan) > 0) {
+        var editorContainerDom = this.$editorContainer.get(0);
+        var firstNode = editorContainerDom.firstChild;
+        var prefixNode = editorContainerDom.getElementsByClassName('editor-prefix')[0];
+        if (document.createRange) {
+          var range = document.createRange();
+          range.setStart(firstNode, 0); /* 设置范围的起始位置为首节点第一个位置 */
+          range.setEnd(prefixNode, 0); /* 设置范围的结束位置为前缀节点前一个位置 */
+          range.deleteContents(); /* 删除这个范围的内容 */
+        }
+      }
+    },
+
+    /* 插入用户昵称 */
+    insertNickname: function() {
+      var range = this.lastEditRange;
+
+      /* 在某些情况下无法插入，只能插入到编辑框最后 */
+      if (this.isForbidden(range)) {
+        range = this.getSafeRange(range);
+      }
+
+      if (range) {
+        var fragment = range.createContextualFragment(this.nicknameSpan); /* 将 html 片段转化为文档片段 */
+        range.insertNode(fragment); /* 在光标位置插入节点，光标范围会包括整个节点 */
+        range.collapse(false); /* 折叠光标范围，true 移动到插入节点最前面，false 到最后面 */
+      }
+    },
+
+    /* 粘贴事件 */
+    pasteHandle: function (e) {
+      /* 获取不了光标位置 */
+      var range;
+
+      if (window.getSelection && window.getSelection().getRangeAt) {
+        range = window.getSelection().getRangeAt(0);
+      } else {
+        return;
+      }
+
+      /* 在某些情况下禁止粘贴 */
+      if (this.isForbidden(range)) {
+        return;
+      }
+
+      var clipboardData = e.clipboardData || window.clipboardData;
+      var pasteText = clipboardData.getData('text/plain');
+
+      /* 过滤掉非文本内容 */
+      if (!pasteText) {
+        return;
+      }
+
+      /* 如果光标范围未折叠（即包含内容），删除掉包含的内容 */
+      if (!range.collapsed) {
+        range.deleteContents();
+      }
+
+      /* 粘贴剪切板内容 */
+      var textNode = document.createTextNode(pasteText); /* 创建文本节点 */
+      range.insertNode(textNode); /* 在光标位置插入文本节点，光标范围会包括整个节点 */
+      range.collapse(false); /* 折叠光标范围，true 折叠到插入节点最前面，false 到最后面 */
+    },
+  });
+
+  new Editor();
 </script>
 </html>

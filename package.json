@@ -4,7 +4,7 @@
   "description": "This project is for a simple-rich-text-editor learning",
   "main": "index.js",
   "scripts": {
-    "start": "http-server -p 8001",
+    "start": "http-server -p 9999",
     "ppt": "nodeppt start -p 9998 -d ppt -w"
   },
   "repository": {
