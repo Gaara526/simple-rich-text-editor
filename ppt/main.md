@@ -73,7 +73,7 @@ pengyumeng
 
 - 如何保证不会被删除：删除了再补回来
 
-- 无法禁止输入：只能输入内容后，将输入内容删除
+- 如何禁止输入：用户输入内容后，将输入内容删除
 
 [slide]
 
@@ -244,7 +244,7 @@ insertNickname: function() {
 
 [slide]
 
-# <font color=#ff9933>踩坑3：contenteditable="false" 元素虽不可编辑，但是可以插入 </font>
+# <font color=#ff9933>踩坑3：contenteditable="false" 元素虽不可编辑，但是阻止通过范围的方法插入内容 </font>
 
 需要判断该位置是否可以插入用户昵称
 
@@ -253,23 +253,17 @@ insertNickname: function() {
 # <font color=#0099ff>如何判断该位置是否可以插入</font>
 
 ``` JavaScript
+/* 判断该位置是否禁止插入或粘贴 */
 isForbidden: function (range) {
-  /* 光标范围在前缀签名节点、昵称节点、短链节点、自定义节点内无法插入或粘贴 */
-  const forbiddenClassList = ['sms-editor-prefix', 'sms-editor-nickname'];
+  /* 光标范围在前缀签名节点、昵称节点内禁止插入或粘贴 */
+  const forbiddenClassList = ['editor-prefix', 'editor-nickname'];
   if (forbiddenClassList.indexOf(range.startContainer.parentNode.className) > -1) {
     return true;
   }
 
-  /* 光标起始点在前缀签名节点前无法插入或粘贴 */
+  /* 光标起始点在前缀签名节点前禁止插入或粘贴 */
   return range.startContainer === this.$editorContainer.get(0) && range.startOffset === 0;
 },
-
-...
-
-/* 在需要插入的逻辑之前做判断，如果该位置不能插入，将位置移动到合理的地方 */
-if (this.isForbidden(range)) {
-  range = this.getSafeRange(range);
-}
 ```
 
 [slide]
@@ -334,26 +328,25 @@ pasteHandle: function (e) {
 - 聚焦时判断：如果编辑框最后子节点不是文本节点，创建一个空的文本节点，并使光标移动到该位置
 
 ``` JavaScript
-this.$editorContainer.bind('focus', function (e) {
-    ...
-    
-    var editorDom = me.$editorContainer.get(0);
-    if (editorDom.lastChild.nodeType !== 3) {
-        /* 如果编辑框最后节点不是文本节点，添加一个空的文本节点 */
-        var newTextNode = document.createTextNode('');
-        editorDom.appendChild(newTextNode);
-    }
-    
-    /* 如果编辑框最后节点是一个空的文本节点（不空光标自动会出现，不用再写这个逻辑），让光标出现；*/
-    var lastChild = editorDom.lastChild;
-    if (lastChild.nodeType === 3 && lastChild.wholeText === '') {
-        var range = document.createRange();
-        range.selectNode(lastChild);
-        var selection = document.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-    }
-});
+/* 显示光标 */
+showSelection() {
+  var editorDom = this.$editorContainer.get(0);
+  if (editorDom.lastChild.nodeType !== 3) {
+    /* 如果编辑框最后节点不是文本节点，添加一个空的文本节点 */
+    var newTextNode = document.createTextNode('');
+    editorDom.appendChild(newTextNode);
+  }
+
+  /* 如果编辑框最后节点是一个空的文本节点（不空光标自动会出现，不用再写这个逻辑），让光标出现；*/
+  var lastChild = editorDom.lastChild;
+  if (lastChild.nodeType === 3 && lastChild.wholeText === '') {
+    var range = document.createRange();
+    range.selectNode(lastChild);
+    var selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+},
 ```
 
 [slide]

@@ -68,58 +68,42 @@
       var me = this;
 
       /* 加载前缀签名 */
-      this.$editorContainer.html(this.prefixSpan);
-      this.lastEditRange = this.getSafeRange();
-
-      /* 输入事件处理 */
-      this.$editorContainer.bind('input', function (e) {
-        me.inputHandle(me, e);
-      });
+      // this.$editorContainer.html(this.prefixSpan);
+      // this.lastEditRange = this.getSafeRange();
 
       /* 聚焦事件处理 */
       this.$editorContainer.bind('focus', function () {
         me.$editorWrapper.addClass('focus-status');
-
-        var editorDom = me.$editorContainer.get(0);
-        if (editorDom.lastChild.nodeType !== 3) {
-          /* 如果编辑框最后节点不是文本节点，添加一个空的文本节点 */
-          var newTextNode = document.createTextNode('');
-          editorDom.appendChild(newTextNode);
-        }
-
-        /* 如果编辑框最后节点是一个空的文本节点（不空光标自动会出现，不用再写这个逻辑），让光标出现；*/
-        var lastChild = editorDom.lastChild;
-        if (lastChild.nodeType === 3 && lastChild.wholeText === '') {
-          var range = document.createRange();
-          range.selectNode(lastChild);
-          var selection = document.getSelection();
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
+        // me.showSelection();
       });
 
       /* 失焦事件处理 */
       this.$editorContainer.bind('blur', function () {
         me.$editorWrapper.removeClass('focus-status');
-        me.recordLastRange();
+        // me.recordLastRange();
       });
 
       /* 键盘按起事件处理 */
-      this.$editorContainer.bind('keyup', function (e) {
-        me.recordLastRange();
-      });
+      // this.$editorContainer.bind('keyup', function (e) {
+      //   me.recordLastRange();
+      // });
+
+      /* 输入事件处理 */
+      // this.$editorContainer.bind('input', function (e) {
+      //   me.inputHandle(me, e);
+      // });
 
       /* 插入用户昵称 */
-      this.$insertNicknameBtn.on('click', function (e) {
-        e.preventDefault();
-        me.insertNickname();
-      });
+      // this.$insertNicknameBtn.on('click', function (e) {
+      //   e.preventDefault();
+      //   me.insertNickname();
+      // });
 
       /* 粘贴事件处理 */
-      this.$editorContainer.bind('paste', function (e) {
-        e.preventDefault();
-        me.pasteHandle(e.originalEvent);
-      });
+      // this.$editorContainer.bind('paste', function (e) {
+      //   e.preventDefault();
+      //   me.pasteHandle(e.originalEvent);
+      // });
     },
 
     /* 获取安全的光标位置（即编辑框最后）*/
@@ -141,46 +125,66 @@
       }
     },
 
-    /* 某些情况下禁止插入或粘贴 */
+    /* 判断该位置是否禁止插入或粘贴 */
     isForbidden: function (range) {
-      /* 光标范围在前缀签名节点、昵称节点、短链节点、自定义节点内无法插入或粘贴 */
+      /* 光标范围在前缀签名节点、昵称节点内禁止插入或粘贴 */
       const forbiddenClassList = ['editor-prefix', 'editor-nickname'];
       if (forbiddenClassList.indexOf(range.startContainer.parentNode.className) > -1) {
         return true;
       }
 
-      /* 光标起始点在前缀签名节点前无法插入或粘贴 */
+      /* 光标起始点在前缀签名节点前禁止插入或粘贴 */
       return range.startContainer === this.$editorContainer.get(0) && range.startOffset === 0;
+    },
+
+    /* 显示光标 */
+    showSelection() {
+      var editorDom = this.$editorContainer.get(0);
+      if (editorDom.lastChild.nodeType !== 3) {
+        /* 如果编辑框最后节点不是文本节点，添加一个空的文本节点 */
+        var newTextNode = document.createTextNode('');
+        editorDom.appendChild(newTextNode);
+      }
+
+      /* 如果编辑框最后节点是一个空的文本节点（不空光标自动会出现，不用再写这个逻辑），让光标出现；*/
+      var lastChild = editorDom.lastChild;
+      if (lastChild.nodeType === 3 && lastChild.wholeText === '') {
+        var range = document.createRange();
+        range.selectNode(lastChild);
+        var selection = document.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
     },
 
     /* 输入事件处理 */
     inputHandle: function() {
       var inputContent = this.$editorContainer.html();
 
-      /* 输入框前缀签名不可删除，如果删除了需补回来，然后将光标移动至该文案后面 */
+      /* 前缀签名不可删除，如果被删了需补回来 */
       if (inputContent.indexOf(this.prefixSpan) < 0) {
-        // this.$editorContainer.prepend(this.prefixSpan);
+        this.$editorContainer.prepend(this.prefixSpan);
 
-        if (window.getSelection && window.getSelection().getRangeAt) {
-          var range = window.getSelection().getRangeAt(0); /* 获取光标位置 */
-          var fragment = range.createContextualFragment(this.prefixSpan); /* 将 html 片段转化为文档片段 */
-          range.insertNode(fragment); /* 在光标位置插入该片段，光标范围会包括整个片段 */
-          range.collapse(false); /* 折叠光标范围，true 折叠到插入节点最前面，false 到最后面 */
-        }
+        // if (window.getSelection && window.getSelection().getRangeAt) {
+        //   var range = window.getSelection().getRangeAt(0); /* 获取光标位置 */
+        //   var fragment = range.createContextualFragment(this.prefixSpan); /* 将 html 片段转化为文档片段 */
+        //   range.insertNode(fragment); /* 在光标位置插入该片段，光标范围会包括整个片段 */
+        //   range.collapse(false); /* 折叠光标范围，true 折叠到插入节点最前面，false 到最后面 */
+        // }
       }
 
       /* 如果在前缀签名之前输入内容，则输入后要将输入内容删除 */
-      if (inputContent.indexOf(this.prefixSpan) > 0) {
-        var editorContainerDom = this.$editorContainer.get(0);
-        var firstNode = editorContainerDom.firstChild;
-        var prefixNode = editorContainerDom.getElementsByClassName('editor-prefix')[0];
-        if (document.createRange) {
-          var range = document.createRange();
-          range.setStart(firstNode, 0); /* 设置范围的起始位置为首节点第一个位置 */
-          range.setEnd(prefixNode, 0); /* 设置范围的结束位置为前缀节点前一个位置 */
-          range.deleteContents(); /* 删除这个范围的内容 */
-        }
-      }
+      // if (inputContent.indexOf(this.prefixSpan) > 0) {
+      //   var editorContainerDom = this.$editorContainer.get(0);
+      //   var firstNode = editorContainerDom.firstChild;
+      //   var prefixNode = editorContainerDom.getElementsByClassName('editor-prefix')[0];
+      //   if (document.createRange) {
+      //     var range = document.createRange();
+      //     range.setStart(firstNode, 0); /* 设置范围的起始位置为首节点第一个位置 */
+      //     range.setEnd(prefixNode, 0); /* 设置范围的结束位置为前缀节点前一个位置 */
+      //     range.deleteContents(); /* 删除这个范围的内容 */
+      //   }
+      // }
     },
 
     /* 插入用户昵称 */
@@ -188,9 +192,9 @@
       var range = this.lastEditRange;
 
       /* 在某些情况下无法插入，只能插入到编辑框最后 */
-      if (this.isForbidden(range)) {
-        range = this.getSafeRange(range);
-      }
+      // if (this.isForbidden(range)) {
+      //   range = this.getSafeRange(range);
+      // }
 
       if (range) {
         var fragment = range.createContextualFragment(this.nicknameSpan); /* 将 html 片段转化为文档片段 */
@@ -201,7 +205,6 @@
 
     /* 粘贴事件 */
     pasteHandle: function (e) {
-      /* 获取不了光标位置 */
       var range;
 
       if (window.getSelection && window.getSelection().getRangeAt) {
