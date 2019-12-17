@@ -200,13 +200,11 @@ if (inputContent.indexOf(this.prefixSpan) > 0) {
 - 在编辑器失焦或者键盘按起的时候记录光标最后的位置
 
 ``` JavaScript
-/* 失焦事件处理 */
-this.$editorContainer.bind('blur', function () {
+/* 键盘按起和鼠标按起事件记录位置 */
+this.$editorContainer.bind('keyup', function (e) {
   me.recordLastRange();
 });
-
-/* 键盘按起事件处理 */
-this.$editorContainer.bind('keyup', function (e) {
+this.$editorContainer.bind('mouseup', function (e) {
   me.recordLastRange();
 });
 

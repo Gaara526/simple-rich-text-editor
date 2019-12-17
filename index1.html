@@ -67,31 +67,30 @@
     init: function() {
       var me = this;
 
+      /* 加载前缀签名 */
+      // this.$editorContainer.html(this.prefixSpan);
+      // this.lastEditRange = this.getSafeRange();
+
       /* 聚焦事件处理 */
       this.$editorContainer.bind('focus', function () {
         me.$editorWrapper.addClass('focus-status');
         // me.showSelection();
       });
+
       /* 失焦事件处理 */
       this.$editorContainer.bind('blur', function () {
         me.$editorWrapper.removeClass('focus-status');
+        // me.recordLastRange();
       });
 
-      /* 加载前缀签名 */
-      // this.$editorContainer.html(this.prefixSpan);
-      // this.lastEditRange = this.getSafeRange();
+      /* 键盘按起事件处理 */
+      // this.$editorContainer.bind('keyup', function (e) {
+      //   me.recordLastRange();
+      // });
 
       /* 输入事件处理 */
       // this.$editorContainer.bind('input', function (e) {
       //   me.inputHandle(me, e);
-      // });
-
-      /* 键盘按起和鼠标按起事件记录位置 */
-      // this.$editorContainer.bind('keyup', function (e) {
-      //   me.recordLastRange();
-      // });
-      // this.$editorContainer.bind('mouseup', function (e) {
-      //   me.recordLastRange();
       // });
 
       /* 插入用户昵称 */
