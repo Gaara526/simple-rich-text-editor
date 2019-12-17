@@ -131,7 +131,7 @@ pengyumeng
 # <font color=#0099ff>范围的常用方法(三) - 操作范围中的内容</font>
 
 - createContextualFragment(html) 将 html 片段转化为文档片段
-- insertNode(node/fragment); 将节点或者片段插入到范围中
+- insertNode(node/fragment) 将节点或者片段插入到范围中
 - deleteContents() 删除范围中的内容
 - collapse(true/false) 折叠范围，true 将范围的终点移动到起点位置，false 将范围的起点移动到终点位置
 - surroundContents 环绕范围插入内容（在富文本编辑器中很重要，本次需求没有用到该功能）
@@ -262,7 +262,7 @@ insertNickname: function() {
 
 [slide]
 
-# <font color=#ff9933>踩坑3：contenteditable="false" 元素虽不可编辑，但是阻止通过范围的方法插入内容 </font>
+# <font color=#ff9933>踩坑3：contenteditable="false" 元素虽不可编辑，但是不会阻止通过范围的方法插入内容 </font>
 
 需要判断该位置是否可以插入用户昵称
 

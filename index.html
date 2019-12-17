@@ -150,7 +150,7 @@
 
       /* 前缀签名不可删除，如果被删了需补回来 */
       if (inputContent.indexOf(this.prefixSpan) < 0) {
-        this.$editorContainer.prepend(this.prefixSpan);
+        // this.$editorContainer.prepend(this.prefixSpan);
 
         // if (window.getSelection && window.getSelection().getRangeAt) {
         //   var range = window.getSelection().getRangeAt(0); /* 获取光标位置 */
@@ -235,7 +235,7 @@
 
       /* 如果编辑框最后节点是一个空的文本节点（不空光标自动会出现，不用再写这个逻辑），让光标出现；*/
       var lastChild = editorDom.lastChild;
-      if (lastChild.nodeType === 3 && lastChild.wholeText === '') {
+      if (lastChild.wholeText === '') {
         var range = document.createRange();
         range.selectNode(lastChild);
         var selection = document.getSelection();
