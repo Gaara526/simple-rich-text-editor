@@ -200,6 +200,9 @@ if (inputContent.indexOf(this.prefixSpan) > 0) {
 - 在编辑器失焦或者键盘按起的时候记录光标最后的位置
 
 ``` JavaScript
+/* 获得初始状态的位置 */
+this.lastEditRange = this.getSafeRange();
+
 /* 键盘按起和鼠标按起事件记录位置 */
 this.$editorContainer.bind('keyup', function (e) {
   me.recordLastRange();
@@ -210,6 +213,23 @@ this.$editorContainer.bind('mouseup', function (e) {
 
 ...
 
+/* 获取安全的光标位置（即编辑框最后）*/
+getSafeRange: function () {
+  var newRange;
+  if (document.createRange) {
+    newRange = document.createRange();
+
+    var editorContainer = this.$editorContainer.get(0);
+    if (editorContainer.childNodes.length > 0) {
+      newRange.setStartAfter(editorContainer.lastChild);
+    } else {
+      newRange.setStart(editorContainer, 0);
+    }
+  }
+  return newRange;
+},
+
+/* 记录光标位置 */
 recordLastRange: function() {
   if (window.getSelection && window.getSelection().getRangeAt) {
     this.lastEditRange = window.getSelection().getRangeAt(0);

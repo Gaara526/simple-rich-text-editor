@@ -79,12 +79,14 @@
 
       /* 加载前缀签名 */
       // this.$editorContainer.html(this.prefixSpan);
-      // this.lastEditRange = this.getSafeRange();
 
       /* 输入事件处理 */
       // this.$editorContainer.bind('input', function (e) {
       //   me.inputHandle(me, e);
       // });
+
+      /* 获得初始状态的位置 */
+      // this.lastEditRange = this.getSafeRange();
 
       /* 键盘按起和鼠标按起事件记录位置 */
       // this.$editorContainer.bind('keyup', function (e) {
@@ -110,12 +112,16 @@
     /* 获取安全的光标位置（即编辑框最后）*/
     getSafeRange: function () {
       var newRange;
-
       if (document.createRange) {
         newRange = document.createRange();
-        newRange.setStartAfter(this.$editorContainer.get(0).lastChild);
-      }
 
+        var editorContainer = this.$editorContainer.get(0);
+        if (editorContainer.childNodes.length > 0) {
+          newRange.setStartAfter(editorContainer.lastChild);
+        } else {
+          newRange.setStart(editorContainer, 0);
+        }
+      }
       return newRange;
     },
 
@@ -136,26 +142,6 @@
 
       /* 光标起始点在前缀签名节点前禁止插入或粘贴 */
       return range.startContainer === this.$editorContainer.get(0) && range.startOffset === 0;
-    },
-
-    /* 显示光标 */
-    showSelection() {
-      var editorDom = this.$editorContainer.get(0);
-      if (editorDom.lastChild.nodeType !== 3) {
-        /* 如果编辑框最后节点不是文本节点，添加一个空的文本节点 */
-        var newTextNode = document.createTextNode('');
-        editorDom.appendChild(newTextNode);
-      }
-
-      /* 如果编辑框最后节点是一个空的文本节点（不空光标自动会出现，不用再写这个逻辑），让光标出现；*/
-      var lastChild = editorDom.lastChild;
-      if (lastChild.nodeType === 3 && lastChild.wholeText === '') {
-        var range = document.createRange();
-        range.selectNode(lastChild);
-        var selection = document.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
     },
 
     /* 输入事件处理 */
@@ -236,6 +222,26 @@
       var textNode = document.createTextNode(pasteText); /* 创建文本节点 */
       range.insertNode(textNode); /* 在光标位置插入文本节点，光标范围会包括整个节点 */
       range.collapse(false); /* 折叠光标范围，true 折叠到插入节点最前面，false 到最后面 */
+    },
+
+    /* 显示光标 */
+    showSelection() {
+      var editorDom = this.$editorContainer.get(0);
+      if (editorDom.lastChild.nodeType !== 3) {
+        /* 如果编辑框最后节点不是文本节点，添加一个空的文本节点 */
+        var newTextNode = document.createTextNode('');
+        editorDom.appendChild(newTextNode);
+      }
+
+      /* 如果编辑框最后节点是一个空的文本节点（不空光标自动会出现，不用再写这个逻辑），让光标出现；*/
+      var lastChild = editorDom.lastChild;
+      if (lastChild.nodeType === 3 && lastChild.wholeText === '') {
+        var range = document.createRange();
+        range.selectNode(lastChild);
+        var selection = document.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
     },
   });
 
